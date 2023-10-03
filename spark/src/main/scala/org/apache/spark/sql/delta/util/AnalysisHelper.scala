@@ -20,9 +20,12 @@ package org.apache.spark.sql.delta.util
 import org.apache.spark.sql.delta.DeltaErrors
 
 import org.apache.spark.sql.{AnalysisException, Dataset, Row, SparkSession}
+import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.analysis.AnalysisErrorAt
 import org.apache.spark.sql.catalyst.expressions.{Attribute, Expression}
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+import org.apache.spark.sql.connector.catalog.TableCatalog
+import org.apache.spark.sql.errors.QueryCompilationErrors
 
 trait AnalysisHelper {
   import AnalysisHelper._
@@ -115,5 +118,30 @@ object AnalysisHelper {
 
     override protected def withNewChildrenInternal(
       newChildren: IndexedSeq[LogicalPlan]): FakeLogicalPlan = copy(children = newChildren)
+  }
+
+  /**
+   *  Parses and returns a catalog-aware table identifier (e.g. catalog.database.table).
+   *
+   *  Delta table identifiers need to be catalog-aware, but the Spark parser's parseTableIdentifier
+   *  method only handles two-part identifiers (e.g. database.table), and its
+   *  parseMultipartIdentifier method returns a Seq[String] that is not easily converted to a
+   *  [[TableIdentifier]] (because the converters in [[CatalogV2Implicits]] are not public).
+   */
+  def parseTableIdentifier(spark: SparkSession, tableName: String): TableIdentifier = {
+    spark.sessionState.sqlParser.parseMultipartIdentifier(tableName) match {
+      case Seq(table) => TableIdentifier(table)
+      case Seq(db, table) => TableIdentifier(table, Some(db))
+      case Seq(catalog, db, table) => TableIdentifier(table, Some(db), Some(catalog))
+      case other => throw QueryCompilationErrors.identifierTooManyNamePartsError(tableName)
+    }
+  }
+
+  def getTableCatalog(spark: SparkSession): TableCatalog = {
+    spark.sessionState.catalogManager.currentCatalog match {
+      case tableCatalog: TableCatalog => tableCatalog
+      case otherCatalog =>
+        throw new IllegalArgumentException(s"Catalog ${otherCatalog.name} does not support tables")
+    }
   }
 }

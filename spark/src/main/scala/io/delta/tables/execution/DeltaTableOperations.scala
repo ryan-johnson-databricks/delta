@@ -54,10 +54,8 @@ trait DeltaTableOperations extends AnalysisHelper { self: DeltaTable =>
     spark.createDataFrame(history.getHistory(limit))
   }
 
-  protected def executeDetails(
-      path: String,
-      tableIdentifier: Option[TableIdentifier]): DataFrame = {
-    val details = DescribeDeltaDetailCommand(Option(path), tableIdentifier, self.deltaLog.options)
+  protected def executeDetails(table: DeltaTableV2): DataFrame = {
+    val details = DescribeDeltaDetailCommand(table.toResolvedTable)
     toDataset(sparkSession, details)
   }
 

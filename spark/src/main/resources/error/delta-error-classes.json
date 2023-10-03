@@ -2182,6 +2182,12 @@
     ],
     "sqlState" : "0AKDC"
   },
+  "DELTA_UNSUPPORTED_DESCRIBE_DETAIL_TABLE" : {
+    "message" : [
+      "DESCRIBE DETAIL does not support <table> of unknown table type."
+    ],
+    "sqlState" : "42809"
+  },
   "DELTA_UNSUPPORTED_DESCRIBE_DETAIL_VIEW" : {
     "message" : [
       "<view> is a view. DESCRIBE DETAIL is only supported for tables."

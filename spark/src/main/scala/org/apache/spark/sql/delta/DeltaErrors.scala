@@ -601,6 +601,13 @@ trait DeltaErrorsBase
     )
   }
 
+  def unsupportedTableInDescribeDetailException(tableName: String): Throwable = {
+    new DeltaAnalysisException(
+      errorClass = "DELTA_UNSUPPORTED_DESCRIBE_DETAIL_TABLE",
+      messageParameters = Array(tableName)
+    )
+  }
+
   def viewInDescribeDetailException(view: TableIdentifier): Throwable = {
     new DeltaAnalysisException(
       errorClass = "DELTA_UNSUPPORTED_DESCRIBE_DETAIL_VIEW",

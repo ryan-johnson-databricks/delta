@@ -291,18 +291,6 @@ trait DeltaCommand extends DeltaLogging {
   }
 
   /**
-   * Extracts [[CatalogTable]] metadata from a LogicalPlan if the plan is a [[ResolvedTable]]. The
-   * table can be a non delta table.
-   */
-  def getTableCatalogTable(target: LogicalPlan, cmd: String): Option[CatalogTable] = {
-    target match {
-      case ResolvedTable(_, _, d: DeltaTableV2, _) => d.catalogTable
-      case ResolvedTable(_, _, t: V1Table, _) => Some(t.catalogTable)
-      case _ => None
-    }
-  }
-
-  /**
    * Helper method to extract the table id or path from a LogicalPlan representing
    * a Delta table. This uses [[DeltaCommand.getDeltaTable]] to convert the LogicalPlan
    * to a [[DeltaTableV2]] and then extracts either the path or identifier from it. If

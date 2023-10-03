@@ -28,6 +28,7 @@ import org.apache.spark.sql.delta.commands.cdc.CDCReader
 import org.apache.spark.sql.delta.metering.DeltaLogging
 import org.apache.spark.sql.delta.sources.{DeltaDataSource, DeltaSourceUtils}
 import org.apache.spark.sql.delta.sources.DeltaSQLConf
+import org.apache.spark.sql.delta.util.AnalysisHelper
 import org.apache.hadoop.fs.Path
 
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
@@ -221,6 +222,11 @@ case class DeltaTableV2(
     deltaLog.startTransaction(catalogTable, snapshotOpt)
   }
 
+  def toResolvedTable: ResolvedTable = {
+    val id = AnalysisHelper.parseTableIdentifier(spark, name).nameParts.asIdentifier
+    ResolvedTable.create(AnalysisHelper.getTableCatalog(spark), id, this)
+  }
+
   /**
    * Creates a V1 BaseRelation from this Table to allow read APIs to go through V1 DataSource code
    * paths.
@@ -317,8 +323,9 @@ case class DeltaTableV2(
 
 object DeltaTableV2 {
   /** Resolves a path into a DeltaTableV2, leveraging standard v2 table resolution. */
-  def apply(spark: SparkSession, tablePath: Path, cmd: String): DeltaTableV2 =
-    resolve(spark, UnresolvedPathBasedDeltaTable(tablePath.toString, cmd), cmd)
+  def apply(spark: SparkSession, tablePath: Path, options: Map[String, String], cmd: String)
+      : DeltaTableV2 =
+    resolve(spark, UnresolvedPathBasedDeltaTable(tablePath.toString, options, cmd), cmd)
 
   /** Resolves a table identifier into a DeltaTableV2, leveraging standard v2 table resolution. */
   def apply(spark: SparkSession, tableId: TableIdentifier, cmd: String): DeltaTableV2 = {

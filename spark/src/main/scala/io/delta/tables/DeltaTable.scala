@@ -144,7 +144,7 @@ class DeltaTable private[tables](
    */
   @Evolving
   def detail(): DataFrame = {
-    executeDetails(deltaLog.dataPath.toString, table.getTableIdentifierIfExists)
+    executeDetails(table)
   }
 
   /**
